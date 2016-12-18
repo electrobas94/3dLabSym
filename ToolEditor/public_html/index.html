@@ -9,45 +9,69 @@
     <body>
         <script src="assets/scripts/three.js"></script>
         <script>
-            var scene = new THREE.Scene();
-            var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            var scene, camera, renderer;
 
-            var renderer = new THREE.WebGLRenderer();
-            renderer.setSize( window.innerWidth, window.innerHeight );
-            document.body.appendChild( renderer.domElement );
+            var WIDTH = window.innerWidth;
+            var HEIGHT = window.innerHeight;
 
-            var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-            var material = new THREE.MeshBasicMaterial( { color : 0x00ff00 } );
-            var cube = new THREE.Mesh( geometry, material );
-            scene.add( cube );
+            var SPEED = 0.01;
 
-            camera.position.z = 5;
+            function init() {
+                scene = new THREE.Scene();
 
-            function render()
-            {
-                requestAnimationFrame( render );
-                cube.rotation.x += 0.1;
-                cube.rotation.y += 0.1;
-                renderer.render( scene, camera );
+                initMesh();
+                initCamera();
+                initLights();
+                initRenderer();
+
+                document.body.appendChild( renderer.domElement );
             }
 
-            window.onresize = function()
-            {
-                renderer.setSize( window.innerWidth, window.innerHeight );
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
+            function initCamera() {
+                camera = new THREE.PerspectiveCamera( 70, WIDTH / HEIGHT, 1, 10 );
+                camera.position.set( 0, 3.5, 5 );
+                camera.lookAt( scene.position );
+            }
+
+
+            function initRenderer() {
+                renderer = new THREE.WebGLRenderer( { antialias : true } );
+                renderer.setSize( WIDTH, HEIGHT );
+            }
+
+            function initLights() {
+                var light = new THREE.AmbientLight( 0xffffff );
+                scene.add( light );
             }
 
             var mesh = null;
-            function initMesh() 
-            {
+            function initMesh() {
                 var loader = new THREE.JSONLoader();
-                loader.load( './test_data/suza.json', function( geometry ) {
-                    mesh = new THREE.Mesh( geometry );
+                loader.load( './test_data/suza.json', function( geometry, materials ) {
+                    mesh = new THREE.Mesh( geometry, new THREE.MeshFaceMaterial( materials ) );
+                    mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.75;
+                    mesh.translation = THREE.GeometryUtils.center( geometry );
                     scene.add( mesh );
                 } );
             }
-            initMesh();
+
+            function rotateMesh() {
+                if ( !mesh ) {
+                    return;
+                }
+
+                mesh.rotation.x -= SPEED * 2;
+                mesh.rotation.y -= SPEED;
+                mesh.rotation.z -= SPEED * 3;
+            }
+
+            function render() {
+                requestAnimationFrame( render );
+                rotateMesh();
+                renderer.render( scene, camera );
+            }
+
+            init();
             render();
         </script>
     </body>
